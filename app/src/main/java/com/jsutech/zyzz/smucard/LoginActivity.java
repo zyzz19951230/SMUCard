@@ -49,7 +49,6 @@ public class LoginActivity extends SMUBaseActivity {
                 // 收到新的验证码图片后的处理：
                 // 先回收过期的图片资源
                 releaseImageViewResouce(checkCodeImg);
-
                 // 再设置新的验证码图片
                 checkCodeImg.setImageBitmap((Bitmap)resultWrapper.getData());
                 unfreezeUI();
