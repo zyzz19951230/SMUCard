@@ -13,6 +13,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.jsutech.zyzz.smucard.network.ResultWrapper;
+import com.jsutech.zyzz.smucard.network.SMUHandler;
+
 public class MainActivity extends SMUBaseActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -102,7 +105,7 @@ public class MainActivity extends SMUBaseActivity
 
 
     @Override
-    public void onUIUpdateMessageReceived(int msgId, Object data) {
+    public void onUIUpdateMessageReceived(int msgId, ResultWrapper resultWrapper) {
 
     }
 }

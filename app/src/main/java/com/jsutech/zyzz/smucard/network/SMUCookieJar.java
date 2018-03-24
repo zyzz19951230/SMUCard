@@ -38,10 +38,6 @@ public class SMUCookieJar implements CookieJar {
      */
     @Override
     public void saveFromResponse(@NonNull HttpUrl url, @NonNull List<Cookie> cookies) {
-        // 先去重
-        Set<Cookie> tmp = new HashSet<>(cookies);
-        cookies.clear();
-        cookies.addAll(tmp);
         cookieStore.put(url.host(), cookies);
     }
 

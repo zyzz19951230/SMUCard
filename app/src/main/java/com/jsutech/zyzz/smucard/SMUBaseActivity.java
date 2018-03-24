@@ -5,6 +5,8 @@ import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
+import com.jsutech.zyzz.smucard.network.ResultWrapper;
+import com.jsutech.zyzz.smucard.network.SMUClient;
 import com.jsutech.zyzz.smucard.network.SMUHandler;
 
 /**
@@ -13,13 +15,10 @@ import com.jsutech.zyzz.smucard.network.SMUHandler;
  */
 
 abstract public class SMUBaseActivity extends AppCompatActivity {
-    protected SMUHandler smuHandler;
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
         super.onCreate(savedInstanceState, persistentState);
-        smuHandler = new SMUHandler(this);
-    }
 
-    abstract public void onUIUpdateMessageReceived(int msgId, Object data);
+    }
+    abstract public void onUIUpdateMessageReceived(int msgId, ResultWrapper resultWrapper);
 }

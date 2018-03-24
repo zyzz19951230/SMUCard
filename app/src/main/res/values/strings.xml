@@ -6,4 +6,7 @@
 
     <string name="action_settings">Settings</string>
     <string name="title_activity_login">Login</string>
+    <string name="userLoginTitle">用户登录</string>
+    <string name="textview">TextView</string>
+    <string name="copyrightString">©2018 Jsutech</string>
 </resources>

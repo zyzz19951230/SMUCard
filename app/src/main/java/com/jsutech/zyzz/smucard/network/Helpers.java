@@ -131,7 +131,7 @@ public class Helpers {
     }
 
     // 判断验证码是否正确
-    static boolean isCheckCodeCorrect(String responseBody){
+    static boolean isCheckCodeWrong(String responseBody){
         //return responseBody.contains("alert('验证码错误');");
         return responseBody.contains("'验证码错误'");
     }

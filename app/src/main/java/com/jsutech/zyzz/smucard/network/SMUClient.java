@@ -1,16 +1,17 @@
 package com.jsutech.zyzz.smucard.network;
 
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.jsutech.zyzz.smucard.network.exceptions.ClientException;
+import com.jsutech.zyzz.smucard.network.exceptions.NetworkException;
+import com.jsutech.zyzz.smucard.network.exceptions.ServerException;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -108,40 +109,35 @@ public class SMUClient {
         return request(Helpers.HttpMethod.POST, url, headers, requestBody, tag);
     }
 
+    // 同步GET方法
+    private Call get(String action, Headers headers, Object tag) {
+        return request(Helpers.HttpMethod.GET, HttpUrl.parse(Helpers.getAbsUrl(BASE_URL, action)), headers, null, tag);
+    }
+
+    // 同步POST方法
+    private Call post(String action, Headers headers, RequestBody requestBody, Object tag){
+        return request(Helpers.HttpMethod.POST,  HttpUrl.parse(Helpers.getAbsUrl(BASE_URL, action)), headers, requestBody, tag);
+    }
+
     public Call refreshCheckCode(){
-        final Call call = get(HttpUrl.parse(Helpers.getAbsUrl(BASE_URL, Actions.CHECK_CODE)), null, null);
+        final Call call = get(Actions.CHECK_CODE, null, null);
         // 异步执行网络请求
-        EXECUTOR_SERVICE.execute(new AsyncRequest() {
+        EXECUTOR_SERVICE.execute(new SMURequest(getSmuHandler()){
             @Override
-            public void doRequest() {
+            void doRequest() {
                 try {
                     Response response = call.execute();
-                    onRequestDone(response, null);
+                    // 请求不成功
+                    if (!response.isSuccessful()){
+                        onException(new ServerException(response.code(), response.message()), call);
+                    } else {
+                        // 网络请求成功，读取验证码图片
+                        onResponse(SMUHandler.UIUpdateMessages.RECEIVE_CHECK_CODE, BitmapFactory.decodeStream(response.body().byteStream()), call);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    onRequestDone(null, e);
-                }
-            }
-
-            @Override
-            void onException(Exception e) {
-                super.onException(e);
-                if (smuHandler != null){
-                    smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.NETWORK_ERROR, e);
-                }
-            }
-
-            @Override
-            void onResponse(Response response) {
-                super.onResponse(response);
-                if (smuHandler != null){
-                    if (response.isSuccessful()){
-                        InputStream inputStream = response.body().byteStream();
-                        Bitmap checkCodeImg = BitmapFactory.decodeStream(inputStream);
-                        smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.REQUEST_CHECK_CODE, checkCodeImg);
-                    } else {
-                        smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.SEVER_ERROR, response.message());
-                    }
+                    // 网络请求发生错误
+                    onException(new NetworkException(e), call);
                 }
             }
         });
@@ -156,23 +152,46 @@ public class SMUClient {
         formBuilder.add("password", password);
         formBuilder.add("checkCode", checkCode);
         formBuilder.add("pwd", Helpers.calcPWD(password));
-        Call loginCall = post(HttpUrl.parse(Helpers.getAbsUrl(BASE_URL, Actions.LOGIN)), null, formBuilder.build(), null);
+        final Call loginCall = post(Actions.LOGIN, null, formBuilder.build(), null);
         // 发起异步请求
-        EXECUTOR_SERVICE.execute(new AsyncRequest() {
+        EXECUTOR_SERVICE.execute(new SMURequest(getSmuHandler()) {
             @Override
             void doRequest() {
-                // 首先先测试用户是否已登录
-                Call isLoginCall = post(HttpUrl.parse(Helpers.getAbsUrl(BASE_URL, Actions.IS_LOGIN)), null, null, null);
+                // 先测试用户是否已登录
+                Call isLoginCall = post(Actions.IS_LOGIN, null, null, null);
                 try {
-                    Response response = isLoginCall.execute();
-                    if (!response.isSuccessful()){
-                        onException(new Exception(""));
+                    Response isLoginResponse = isLoginCall.execute();
+                    if (!isLoginResponse.isSuccessful()){
+                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()), null);
+                    } else {
+                        if (isLoginResponse.body().string().endsWith("true")){
+                            // 用户已登录
+                            onException(new ClientException("用户已登录！", SMUHandler.UIUpdateMessages.ALREADY_LOGIN), null);
+
+                        } else {
+                            // 用户未登录，发送登录请求
+                            Response loginResponse = loginCall.execute();
+                            if (!loginResponse.isSuccessful()){
+                                onException(new ServerException(loginResponse.code(), loginResponse.message()), loginCall);
+                            } else {
+                                // 分析服务器返回的结果
+                                String bodyText = loginResponse.body().string();
+                                if (Helpers.isCheckCodeWrong(bodyText)){
+                                    // 验证码错误
+                                    onException(new ClientException("验证码错误！", SMUHandler.UIUpdateMessages.CHECK_CODE_WRONG), loginCall);
+                                } else if(Helpers.isIndexPage(bodyText)){
+                                    // 用户名或者密码错误
+                                    onException(new ClientException("用户名或密码错误", SMUHandler.UIUpdateMessages.USR_OR_PWD_WRONG), loginCall);
+                                } else {
+                                    // 登录成功
+                                    onResponse(SMUHandler.UIUpdateMessages.LOGIN_SUCCESS, "登录成功", loginCall);
+                                }
+                            }
+                        }
                     }
-
                 } catch (IOException e) {
-                    onException(e);
                     e.printStackTrace();
-
+                    onException(new NetworkException(e), null);
                 }
             }
         });
