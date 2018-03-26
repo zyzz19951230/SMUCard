@@ -1,7 +1,8 @@
 package com.jsutech.zyzz.smucard.network.exceptions;
 
 /**
- * Created by Administrator on 2018/3/24 0024.
+ * Created by zyzz on 2018/3/24 0024.
+ *
  */
 
 public class ClientException extends Exception {
