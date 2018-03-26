@@ -22,12 +22,12 @@ public class SMUHandler extends Handler {
     public void handleMessage(Message msg) {
         super.handleMessage(msg);
         if (msg.what == HANDLER_ID && msg.arg1 == msg.arg2){
-            context.onUIUpdateMessageReceived(msg.arg1, (ResultWrapper) msg.obj);
+            context.onUIUpdateMessageReceived(msg.arg1, msg.obj);
         }
     }
 
-    public void sendUIUpdateMessage(int msgId, ResultWrapper resultWrapper){
-        Message message = obtainMessage(HANDLER_ID, msgId, msgId, resultWrapper);
+    public void sendUIUpdateMessage(int msgId, Object data){
+        Message message = obtainMessage(HANDLER_ID, msgId, msgId, data);
         sendMessage(message);
     }
 
@@ -41,7 +41,8 @@ public class SMUHandler extends Handler {
         public final static int ALREADY_LOGIN = 1;
         public final static int RECEIVE_CHECK_CODE = 2;
         public final static int USR_OR_PWD_WRONG = 3;
-        public final static int CHECK_CODE_WRONG = 3;
-        public static final int LOGIN_SUCCESS = 4;
+        public final static int CHECK_CODE_WRONG = 4;
+        public static final int LOGIN_SUCCESS = 5;
+        public static final int REQUEST_CANCELLED = 6;
     }
 }

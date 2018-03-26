@@ -16,10 +16,10 @@ abstract class AbsAsyncRequest implements Runnable{
     // 重写此方法，在此方法中执行网络请求
     abstract void doRequest();
 
-    abstract void onResponse(int code, Object data, Call call);
+    abstract void onResponse(int code, Object data);
 
     // 网络请求错误
-    abstract void onException(Exception e, Call call);
+    abstract void onException(Exception e);
 
 
 }

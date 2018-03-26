@@ -20,5 +20,5 @@ abstract public class SMUBaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState, persistentState);
 
     }
-    abstract public void onUIUpdateMessageReceived(int msgId, ResultWrapper resultWrapper);
+    abstract public void onUIUpdateMessageReceived(int msgId, Object data);
 }

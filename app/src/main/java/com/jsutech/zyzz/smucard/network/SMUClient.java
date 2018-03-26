@@ -129,15 +129,15 @@ public class SMUClient {
                     Response response = call.execute();
                     // 请求不成功
                     if (!response.isSuccessful()){
-                        onException(new ServerException(response.code(), response.message()), call);
+                        onException(new ServerException(response.code(), response.message()));
                     } else {
                         // 网络请求成功，读取验证码图片
-                        onResponse(SMUHandler.UIUpdateMessages.RECEIVE_CHECK_CODE, BitmapFactory.decodeStream(response.body().byteStream()), call);
+                        onResponse(SMUHandler.UIUpdateMessages.RECEIVE_CHECK_CODE, BitmapFactory.decodeStream(response.body().byteStream()));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                     // 网络请求发生错误
-                    onException(new NetworkException(e), call);
+                    onException(new NetworkException(e));
                 }
             }
         });
@@ -162,36 +162,36 @@ public class SMUClient {
                 try {
                     Response isLoginResponse = isLoginCall.execute();
                     if (!isLoginResponse.isSuccessful()){
-                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()), null);
+                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
                     } else {
                         if (isLoginResponse.body().string().endsWith("true")){
                             // 用户已登录
-                            onException(new ClientException("用户已登录！", SMUHandler.UIUpdateMessages.ALREADY_LOGIN), null);
+                            onException(new ClientException("用户已登录！", SMUHandler.UIUpdateMessages.ALREADY_LOGIN));
 
                         } else {
                             // 用户未登录，发送登录请求
                             Response loginResponse = loginCall.execute();
                             if (!loginResponse.isSuccessful()){
-                                onException(new ServerException(loginResponse.code(), loginResponse.message()), loginCall);
+                                onException(new ServerException(loginResponse.code(), loginResponse.message()));
                             } else {
                                 // 分析服务器返回的结果
                                 String bodyText = loginResponse.body().string();
                                 if (Helpers.isCheckCodeWrong(bodyText)){
                                     // 验证码错误
-                                    onException(new ClientException("验证码错误！", SMUHandler.UIUpdateMessages.CHECK_CODE_WRONG), loginCall);
-                                } else if(Helpers.isIndexPage(bodyText)){
+                                    onException(new ClientException("验证码错误！", SMUHandler.UIUpdateMessages.CHECK_CODE_WRONG));
+                                } else if(!Helpers.isIndexPage(bodyText)){
                                     // 用户名或者密码错误
-                                    onException(new ClientException("用户名或密码错误", SMUHandler.UIUpdateMessages.USR_OR_PWD_WRONG), loginCall);
+                                    onException(new ClientException("用户名或密码错误", SMUHandler.UIUpdateMessages.USR_OR_PWD_WRONG));
                                 } else {
                                     // 登录成功
-                                    onResponse(SMUHandler.UIUpdateMessages.LOGIN_SUCCESS, "登录成功", loginCall);
+                                    onResponse(SMUHandler.UIUpdateMessages.LOGIN_SUCCESS, "登录成功");
                                 }
                             }
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    onException(new NetworkException(e), null);
+                    onException(new NetworkException(e));
                 }
             }
         });

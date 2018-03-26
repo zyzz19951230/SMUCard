@@ -20,21 +20,21 @@ abstract class SMURequest extends AbsAsyncRequest {
     abstract void doRequest();
 
     @Override
-    void onResponse(int code, Object data, Call call) {
-        smuHandler.sendUIUpdateMessage(code, new ResultWrapper(null, data, call));
+    void onResponse(int code, Object data) {
+        smuHandler.sendUIUpdateMessage(code, data);
     }
 
     @Override
-    void onException(Exception e, Call call) {
+    void onException(Exception e) {
         if (e instanceof NetworkException){
-            smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.NETWORK_ERROR, new ResultWrapper(e, null, call));
+            smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.NETWORK_ERROR, e);
         } else if (e instanceof ServerException){
-            smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.SERVER_ERROR, new ResultWrapper(e, null, call));
+            smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.SERVER_ERROR, e);
         } else if (e instanceof ClientException){
             ClientException exception = (ClientException) e;
-            smuHandler.sendUIUpdateMessage(exception.getErrorCode(), new ResultWrapper(e, null, call));
+            smuHandler.sendUIUpdateMessage(exception.getErrorCode(), e);
         } else {
-            smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.UNKNOWN_ERROR, new ResultWrapper(e, null, call));
+            smuHandler.sendUIUpdateMessage(SMUHandler.UIUpdateMessages.UNKNOWN_ERROR, e);
         }
     }
 }

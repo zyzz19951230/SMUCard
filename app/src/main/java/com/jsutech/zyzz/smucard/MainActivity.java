@@ -105,7 +105,7 @@ public class MainActivity extends SMUBaseActivity
 
 
     @Override
-    public void onUIUpdateMessageReceived(int msgId, ResultWrapper resultWrapper) {
+    public void onUIUpdateMessageReceived(int msgId, Object data) {
 
     }
 }

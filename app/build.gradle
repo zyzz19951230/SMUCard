@@ -17,6 +17,8 @@ android {
         }
     }
     buildToolsVersion '26.0.2'
+    productFlavors {
+    }
 }
 
 dependencies {
@@ -30,4 +32,12 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.10.0'
     compile 'org.jsoup:jsoup:1.11.2'
     compile 'org.litepal.android:core:1.6.1'
+    api('com.afollestad.material-dialogs:core:0.9.6.0'){
+        exclude group: 'com.android.support'
+
+    }
+    api('com.afollestad.material-dialogs:commons:0.9.6.0'){
+        exclude group: 'com.android.support'
+    }
+
 }
