@@ -1,5 +1,6 @@
 package com.jsutech.zyzz.smucard;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -73,7 +74,7 @@ public class LoginActivity extends SMUBaseActivity {
                 resetCheckCodImg();
                 unfreezeUI();
                 break;
-            // 服务器返回错误码：如404，403等
+            // 服务器返回错误码：如404，503等
             case SMUHandler.UIUpdateMessages.SERVER_ERROR:
                 dismissDialogs();
                 errorDialog.setContent("服务器错误：\n" + ((NetworkException)data).getMessage());
@@ -108,7 +109,7 @@ public class LoginActivity extends SMUBaseActivity {
                 dismissDialogs();
                 releaseImageViewResource();
                 // 跳转到主界面
-                //startActivities();
+                jumpToMainActivity(usernameTxt.getText().toString());
                 break;
             default:
                 dismissDialogs();
@@ -123,6 +124,10 @@ public class LoginActivity extends SMUBaseActivity {
         checkCodeTxt = findViewById(R.id.checkCodeEditText);
         checkCodeImg = findViewById(R.id.checkCodeImageView);
         loginBtn = findViewById(R.id.loginButton);
+        String loginID = getIntent().getStringExtra("loginID");
+        if (loginID != null){
+            usernameTxt.setText(loginID);
+        }
         // 设置对话框
         refreshingCheckCodeDialog = new MaterialDialog.Builder(this)
                 .cancelable(false)
@@ -254,13 +259,21 @@ public class LoginActivity extends SMUBaseActivity {
             info += "验证码不能为空";
 
         if (!info.equals("")){
-            errorDialog.setTitle("用户登录");
-            errorDialog.setContent(info);
-            errorDialog.show();
+            infoDialog.setContent(info);
+            infoDialog.show();
             return;
         }
         freezeUI();
         loggingDialog.show();
         smuClient.login(username, password, checkCode);
+    }
+
+    // 跳转到主页面
+    private void jumpToMainActivity(String loginID){
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("loginID", loginID);
+        startActivity(intent);
+        releaseImageViewResource();
+        finish();
     }
 }

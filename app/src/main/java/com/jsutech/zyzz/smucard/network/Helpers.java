@@ -36,7 +36,7 @@ public class Helpers {
 
     // 正则表达式，从网页中解析（提取）数据时使用
     // 匹配字符串中的整数或小数
-    private static Pattern NUMBER_IN_STRING = Pattern.compile("^\\D*(?<number>[-+]?[\\d]+(\\.[\\d]+)?)\\D*");
+    private static Pattern NUMBER_IN_STRING = Pattern.compile("^\\D*([-+]?[\\d]+(\\.[\\d]+)?)\\D*");
     // 空请求体
     private final static RequestBody BLANK_REQUEST_BODY = RequestBody.create(MediaType.parse("text/plain"), "");
 

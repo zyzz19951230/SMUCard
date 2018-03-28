@@ -9,4 +9,7 @@
     <string name="userLoginTitle">用户登录</string>
     <string name="textview">TextView</string>
     <string name="copyrightString">©2018 Jsutech</string>
+    <string name="checkCodeTip">（请输入下方验证码，不区分大小写！点击图片刷新）</string>
+    <string name="title_activity_main2">MainActivity2</string>
+    <string name="loginBtnText">登录</string>
 </resources>
