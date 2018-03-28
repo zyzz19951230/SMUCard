@@ -15,12 +15,12 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="36dp"
-        android:text="@string/userLoginTitle"
+        android:text="@string/use_login_title"
         android:textAppearance="@android:style/TextAppearance.Large"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="@string/userLoginTitle" />
+        tools:text="@string/use_login_title" />
 
     <EditText
         android:id="@+id/usernameEditText"
@@ -72,7 +72,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="20dp"
-        android:text="@string/loginBtnText"
+        android:text="@string/login_btn_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -86,7 +86,7 @@
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:text="@string/copyrightString"
+        android:text="@string/copyright_string"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -112,9 +112,9 @@
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:singleLine="true"
-        android:text="@string/checkCodeTip"
+        android:text="@string/check_code_tip"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/checkCodeEditText"
-        tools:text="@string/checkCodeTip" />
+        tools:text="@string/check_code_tip" />
 </android.support.constraint.ConstraintLayout>

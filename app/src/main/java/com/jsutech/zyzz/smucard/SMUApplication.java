@@ -10,7 +10,7 @@ import org.litepal.LitePalApplication;
  *
  */
 
-public class SMUCardApplication extends LitePalApplication {
+public class SMUApplication extends LitePalApplication {
     private SMUClient client;
 
     @Override

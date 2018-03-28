@@ -47,7 +47,7 @@ public class LoginActivity extends SMUBaseActivity {
         // 创建Handler
         SMUHandler smuHandler = new SMUHandler(this);
         // 获取client对象
-        smuClient = ((SMUCardApplication)getApplication()).getClient();
+        smuClient = ((SMUApplication)getApplication()).getClient();
         smuClient.setSmuHandler(smuHandler);
         // 获取布局中的控件实例
         setupUI();
@@ -56,17 +56,17 @@ public class LoginActivity extends SMUBaseActivity {
     }
 
     @Override
-    public void onUIUpdateMessageReceived(int msgId, Object data) {
+    public void onClientMessageReceived(int msgId, Object data) {
         switch (msgId){
             // 刷新验证码：收到新的验证码
-            case SMUHandler.UIUpdateMessages.RECEIVE_CHECK_CODE:
+            case SMUClient.ClientMessages.RECEIVE_CHECK_CODE:
                 // 设置新的验证码图片
                 setCheckCodeImg((Bitmap)data);
                 dismissDialogs();
                 unfreezeUI();
                 break;
             // 网络错误：由网络连通性、超时等原因引起
-            case SMUHandler.UIUpdateMessages.NETWORK_ERROR:
+            case SMUClient.ClientMessages.NETWORK_ERROR:
                 dismissDialogs();
                 NetworkException e = (NetworkException) data;
                 errorDialog.setContent(e.getLocalizedMessage());
@@ -75,7 +75,7 @@ public class LoginActivity extends SMUBaseActivity {
                 unfreezeUI();
                 break;
             // 服务器返回错误码：如404，503等
-            case SMUHandler.UIUpdateMessages.SERVER_ERROR:
+            case SMUClient.ClientMessages.SERVER_ERROR:
                 dismissDialogs();
                 errorDialog.setContent("服务器错误：\n" + ((NetworkException)data).getMessage());
                 errorDialog.show();
@@ -83,7 +83,7 @@ public class LoginActivity extends SMUBaseActivity {
                 unfreezeUI();
                 break;
             // 验证码错误
-            case SMUHandler.UIUpdateMessages.CHECK_CODE_WRONG:
+            case SMUClient.ClientMessages.CHECK_CODE_WRONG:
                 dismissDialogs();
                 errorDialog.setContent("验证码错误，请重新输入！");
                 errorDialog.show();
@@ -92,7 +92,7 @@ public class LoginActivity extends SMUBaseActivity {
                 unfreezeUI();
                 break;
             // 用户名或密码错误
-            case SMUHandler.UIUpdateMessages.USR_OR_PWD_WRONG:
+            case SMUClient.ClientMessages.USR_OR_PWD_WRONG:
                 dismissDialogs();
                 errorDialog.setContent("用户名或者密码错误！");
                 errorDialog.show();
@@ -102,10 +102,10 @@ public class LoginActivity extends SMUBaseActivity {
                 unfreezeUI();
                 break;
             // 用户已登录
-            case SMUHandler.UIUpdateMessages.ALREADY_LOGIN:
+            case SMUClient.ClientMessages.ALREADY_LOGIN:
                 break;
             // 用户登录成功
-            case SMUHandler.UIUpdateMessages.LOGIN_SUCCESS:
+            case SMUClient.ClientMessages.LOGIN_SUCCESS:
                 dismissDialogs();
                 releaseImageViewResource();
                 // 跳转到主界面
@@ -270,7 +270,7 @@ public class LoginActivity extends SMUBaseActivity {
 
     // 跳转到主页面
     private void jumpToMainActivity(String loginID){
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(this, HomeActivity.class);
         intent.putExtra("loginID", loginID);
         startActivity(intent);
         releaseImageViewResource();

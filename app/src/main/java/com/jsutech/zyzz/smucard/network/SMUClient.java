@@ -132,7 +132,7 @@ public class SMUClient {
                         onException(new ServerException(response.code(), response.message()));
                     } else {
                         // 网络请求成功，读取验证码图片
-                        onResponse(SMUHandler.UIUpdateMessages.RECEIVE_CHECK_CODE, BitmapFactory.decodeStream(response.body().byteStream()));
+                        onResponse(ClientMessages.RECEIVE_CHECK_CODE, BitmapFactory.decodeStream(response.body().byteStream()));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -166,7 +166,7 @@ public class SMUClient {
                     } else {
                         if (isLoginResponse.body().string().endsWith("true")){
                             // 用户已登录
-                            onException(new ClientException("用户已登录！", SMUHandler.UIUpdateMessages.ALREADY_LOGIN));
+                            onException(new ClientException("用户已登录！", ClientMessages.ALREADY_LOGIN));
 
                         } else {
                             // 用户未登录，发送登录请求
@@ -178,13 +178,13 @@ public class SMUClient {
                                 String bodyText = loginResponse.body().string();
                                 if (Helpers.isCheckCodeWrong(bodyText)){
                                     // 验证码错误
-                                    onException(new ClientException("验证码错误！", SMUHandler.UIUpdateMessages.CHECK_CODE_WRONG));
+                                    onException(new ClientException("验证码错误！", ClientMessages.CHECK_CODE_WRONG));
                                 } else if(!Helpers.isIndexPage(bodyText)){
                                     // 用户名或者密码错误
-                                    onException(new ClientException("用户名或密码错误", SMUHandler.UIUpdateMessages.USR_OR_PWD_WRONG));
+                                    onException(new ClientException("用户名或密码错误", ClientMessages.USR_OR_PWD_WRONG));
                                 } else {
                                     // 登录成功
-                                    onResponse(SMUHandler.UIUpdateMessages.LOGIN_SUCCESS, "登录成功");
+                                    onResponse(ClientMessages.LOGIN_SUCCESS, "登录成功");
                                 }
                             }
                         }
@@ -198,4 +198,18 @@ public class SMUClient {
         return loginCall;
     }
 
+    // 内部类：客户端消息常量定义
+    public static class ClientMessages {
+        public final static int NETWORK_ERROR = -1;
+        public final static int SERVER_ERROR = -2;
+        public final static int UNKNOWN_ERROR = -3;
+
+        public final static int NOT_LOGIN_YET = 0;
+        public final static int ALREADY_LOGIN = 1;
+        public final static int RECEIVE_CHECK_CODE = 2;
+        public final static int USR_OR_PWD_WRONG = 3;
+        public final static int CHECK_CODE_WRONG = 4;
+        public static final int LOGIN_SUCCESS = 5;
+        public static final int REQUEST_CANCELLED = 6;
+    }
 }
