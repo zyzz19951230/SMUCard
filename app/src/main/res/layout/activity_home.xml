@@ -5,21 +5,24 @@
     android:id="@+id/home_drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="false"
     tools:context=".HomeActivity">
     <!--程序主界面的布局-->
-
     <!--头部标题栏和主内容区-->
+
     <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fitsSystemWindows="false"
         tools:context=".HomeActivity">
         <!--头部标题栏-->
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:theme="@style/AppTheme.AppBarOverlay">
+
             <android.support.v7.widget.Toolbar
                 android:id="@+id/titleBar"
                 android:layout_width="match_parent"
@@ -29,10 +32,24 @@
                 app:theme="@style/AppTheme.AppBarOverlay"
                 app:title="@string/app_name"
                 app:titleTextColor="@color/white" />
+
         </android.support.design.widget.AppBarLayout>
-        <!--主内容区-->
-        <!--即抽屉未打开时的内容-->
-        <include layout="@layout/content_home" />
+        <android.support.v4.widget.NestedScrollView
+            android:id="@+id/n_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+            <!--主内容区-->
+            <!--即抽屉未打开时的内容-->
+            <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:id="@+id/main_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+            </FrameLayout>
+
+        </android.support.v4.widget.NestedScrollView>
     </android.support.design.widget.CoordinatorLayout>
 
     <!--抽屉-->
@@ -42,6 +59,8 @@
         android:layout_width="240dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:headerLayout="@layout/header_home"
-        app:menu="@menu/home_menu"/>
+        app:headerLayout="@layout/drawer_header"
+        app:menu="@menu/drawer_menu">
+
+    </android.support.design.widget.NavigationView>
 </android.support.v4.widget.DrawerLayout>
