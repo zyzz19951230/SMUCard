@@ -2,6 +2,7 @@ package com.jsutech.zyzz.smucard.network;
 
 import android.graphics.BitmapFactory;
 
+import com.jsutech.zyzz.smucard.db.models.UserProfile;
 import com.jsutech.zyzz.smucard.network.exceptions.ClientException;
 import com.jsutech.zyzz.smucard.network.exceptions.NetworkException;
 import com.jsutech.zyzz.smucard.network.exceptions.ServerException;
@@ -31,6 +32,8 @@ public class SMUClient {
         final static String CHECK_CODE = "servlet/checkcode";
         final static String IS_LOGIN = "isLogin.action";
         final static String LOGIN = "login.action";
+        final static String USER_INFO = "userInfo.action";
+        final static String USER_PHOTO = "photo.action";
     }
 
     // 一卡通网站的网址
@@ -55,8 +58,12 @@ public class SMUClient {
         return smuHandler;
     }
 
-    public void setSmuHandler(SMUHandler smuHandler) {
+    public void setSMUHandler(SMUHandler smuHandler) {
         this.smuHandler = smuHandler;
+    }
+
+    public SMUHandler getCurrentSMUHandler(){
+        return this.smuHandler;
     }
 
     public void clearCookies(){
@@ -198,6 +205,50 @@ public class SMUClient {
         return loginCall;
     }
 
+    public Call refreshUserInfo(){
+
+        final Call userInfoCall = post(Actions.USER_INFO, null, null, null);
+        // 发起异步请求
+        EXECUTOR_SERVICE.execute(new SMURequest(getSmuHandler()) {
+            @Override
+            void doRequest() {
+                // 先测试用户是否已登录
+                Call isLoginCall = get(Actions.IS_LOGIN, null, null);
+                try {
+                    Response isLoginResponse = isLoginCall.execute();
+                    if (!isLoginResponse.isSuccessful()){
+                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
+                    } else {
+                        if (isLoginResponse.body().string().endsWith("true")){
+                            // 用户已登录，发起请求
+                           Response response =  userInfoCall.execute();
+                           if (!response.isSuccessful()){
+                               onException(new ServerException(response.code(), response.message()));
+                           } else {
+                               // 读取Response
+                               String text = response.body().string();
+                               UserProfile profile = Helpers.parseUserProfile(text);
+                               if (profile == null){
+                                   onException(new ClientException("获取用户信息时出错！", ClientMessages.PARSE_USER_PROFILE_ERROR));
+                               } else {
+                                   onResponse(ClientMessages.RECEIVE_USER_PROFILE, profile);
+                               }
+                           }
+
+                        } else {
+                            // 用户未登录
+                            onException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    onException(new NetworkException(e));
+                }
+            }
+        });
+        return userInfoCall;
+    }
+
     // 内部类：客户端消息常量定义
     public static class ClientMessages {
         public final static int NETWORK_ERROR = -1;
@@ -211,5 +262,7 @@ public class SMUClient {
         public final static int CHECK_CODE_WRONG = 4;
         public static final int LOGIN_SUCCESS = 5;
         public static final int REQUEST_CANCELLED = 6;
+        public static final int PARSE_USER_PROFILE_ERROR = 7;
+        public static final int RECEIVE_USER_PROFILE = 8;
     }
 }

@@ -7,6 +7,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -15,11 +16,12 @@ import android.widget.ImageView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.jsutech.zyzz.smucard.network.ISMUClientReceiver;
 import com.jsutech.zyzz.smucard.network.SMUClient;
 import com.jsutech.zyzz.smucard.network.SMUHandler;
 import com.jsutech.zyzz.smucard.network.exceptions.NetworkException;
 
-public class LoginActivity extends SMUBaseActivity {
+public class LoginActivity extends AppCompatActivity implements ISMUClientReceiver {
 
     private final static String TAG = "LoginActivity";
 
@@ -48,11 +50,11 @@ public class LoginActivity extends SMUBaseActivity {
         SMUHandler smuHandler = new SMUHandler(this);
         // 获取client对象
         smuClient = ((SMUApplication)getApplication()).getClient();
-        smuClient.setSmuHandler(smuHandler);
+        smuClient.setSMUHandler(smuHandler);
         // 获取布局中的控件实例
         setupUI();
         // 设置事件监听
-        setupUIEventListener();
+        setupEventListener();
     }
 
     @Override
@@ -118,6 +120,16 @@ public class LoginActivity extends SMUBaseActivity {
         }
     }
 
+    @Override
+    public SMUClient getSMUClient() {
+        return smuClient;
+    }
+
+    @Override
+    public void switchContext() {
+
+    }
+
     private void setupUI(){
         usernameTxt = findViewById(R.id.usernameEditText);
         passwordTxt = findViewById(R.id.passwordEditText);
@@ -170,7 +182,7 @@ public class LoginActivity extends SMUBaseActivity {
                 }).build();
 
     }
-    private void setupUIEventListener(){
+    private void setupEventListener(){
         View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
