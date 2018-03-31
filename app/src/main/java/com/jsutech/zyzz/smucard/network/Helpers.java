@@ -2,6 +2,7 @@ package com.jsutech.zyzz.smucard.network;
 
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 
 import com.jsutech.zyzz.smucard.db.models.UserProfile;
 
@@ -10,7 +11,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +29,8 @@ import okhttp3.RequestBody;
  */
 
 public class Helpers {
+
+    private static final String TAG = "Helpers";
     // 枚举类型，用于定义Http请求方法，目前支持5种常见请求方法
     public enum HttpMethod {
         GET, POST, PUT, PATCH, DELETE
@@ -33,17 +38,16 @@ public class Helpers {
     // for calcPWD()
     private final static String KEY_STR = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
     private static int _count = 0;
-
     // 正则表达式，从网页中解析（提取）数据时使用
     // 匹配字符串中的整数或小数
     private static Pattern NUMBER_IN_STRING = Pattern.compile("^\\D*([-+]?[\\d]+(\\.[\\d]+)?)\\D*");
     // 空请求体
     private final static RequestBody BLANK_REQUEST_BODY = RequestBody.create(MediaType.parse("text/plain"), "");
 
+
     // 从网站js中移植过来的算法，用以计算password的加密值
     // js源：function lyf(input) - login.js
     static String calcPWD(String input) {
-
         if (input == null || input.length() < 1) {
             return "";
         }
@@ -140,7 +144,7 @@ public class Helpers {
     static UserProfile parseUserProfile(String responseBody){
         Document doc = Jsoup.parse(responseBody);
         Element table = doc.selectFirst("table#itb");
-
+        Log.d(TAG, responseBody);
         // 无法在页面中找到包含用户基本信息的表
         if (table == null){
             return null;
@@ -181,7 +185,6 @@ public class Helpers {
                 }
                 if (tag.html().contains("类别")){
                     userProfile.setClassification(removeNBSP(e.nextElementSibling().html()));
-
                 }
                 if (tag.html().contains("编号")){
                     userProfile.setSUID(removeNBSP(e.nextElementSibling().html()));

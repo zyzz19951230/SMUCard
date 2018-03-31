@@ -21,7 +21,7 @@ import com.jsutech.zyzz.smucard.network.SMUClient;
 import com.jsutech.zyzz.smucard.network.SMUHandler;
 import com.jsutech.zyzz.smucard.network.exceptions.NetworkException;
 
-public class LoginActivity extends AppCompatActivity implements ISMUClientReceiver {
+public class LoginActivity extends BaseSMUActivity {
 
     private final static String TAG = "LoginActivity";
 
@@ -30,7 +30,6 @@ public class LoginActivity extends AppCompatActivity implements ISMUClientReceiv
     private EditText checkCodeTxt;
     private ImageView checkCodeImg;
     private Button loginBtn;
-    protected SMUClient smuClient;
 
     // 进度对话框：正在刷新验证码
     MaterialDialog refreshingCheckCodeDialog;
@@ -40,21 +39,17 @@ public class LoginActivity extends AppCompatActivity implements ISMUClientReceiv
     MaterialDialog errorDialog;
     // 对话框：显示一般信息
     MaterialDialog infoDialog;
+    private SMUClient client;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        // 创建Handler
-        SMUHandler smuHandler = new SMUHandler(this);
-        // 获取client对象
-        smuClient = ((SMUApplication)getApplication()).getClient();
-        smuClient.setSMUHandler(smuHandler);
-        // 获取布局中的控件实例
         setupUI();
-        // 设置事件监听
         setupEventListener();
+        client = ((SMUApplication)getApplication()).getClient();
+        client.setSMUHandler(new SMUHandler(this));
     }
 
     @Override
@@ -121,13 +116,8 @@ public class LoginActivity extends AppCompatActivity implements ISMUClientReceiv
     }
 
     @Override
-    public SMUClient getSMUClient() {
-        return smuClient;
-    }
-
-    @Override
-    public void switchContext() {
-
+    public SMUClient getClient() {
+        return client;
     }
 
     private void setupUI(){
@@ -244,7 +234,7 @@ public class LoginActivity extends AppCompatActivity implements ISMUClientReceiv
     private void refreshCheckCode(){
         freezeUI();
         refreshingCheckCodeDialog.show();
-        smuClient.refreshCheckCode();
+        client.refreshCheckCode();
     }
 
     private void dismissDialogs(){
@@ -277,7 +267,7 @@ public class LoginActivity extends AppCompatActivity implements ISMUClientReceiv
         }
         freezeUI();
         loggingDialog.show();
-        smuClient.login(username, password, checkCode);
+        client.login(username, password, checkCode);
     }
 
     // 跳转到主页面

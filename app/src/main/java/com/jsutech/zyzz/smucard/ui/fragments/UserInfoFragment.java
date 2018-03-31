@@ -1,5 +1,6 @@
 package com.jsutech.zyzz.smucard.ui.fragments;
 
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
@@ -8,18 +9,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.jsutech.zyzz.smucard.BaseSMUActivity;
 import com.jsutech.zyzz.smucard.R;
 import com.jsutech.zyzz.smucard.db.models.UserProfile;
 import com.jsutech.zyzz.smucard.network.SMUClient;
 
+import java.util.Objects;
+
 /**
  * 用户信息展示界面
  */
-public class UserInfoFragment extends BaseSMUFragment {
+public class UserInfoFragment extends BaseFragment {
     private static final String TAG = "UserInfoFragment";
     private ImageButton refreshInfoBtn;
     private TextView usernameLabel;
@@ -30,12 +33,15 @@ public class UserInfoFragment extends BaseSMUFragment {
     private TextView depositLabel;
     private TextView classificationLabel;
     private TextView addressLabel;
-    private TextView uidLabel;
+    private TextView suidLabel;
     private TextView pidLabel;
     private TextView creditLabel;
     private TextView createdTimeLabel;
     private TextView accountStatusLabel;
-
+    private TextView effectiveAreaLabel;
+    private TextView effectiveDateLabel;
+    private ImageView userPhotoImageView;
+    private SMUClient client;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -47,6 +53,7 @@ public class UserInfoFragment extends BaseSMUFragment {
         super.onStart();
         setupUI();
         setupEventListener();
+        client = ((BaseSMUActivity)getContext()).getClient();
     }
 
     private void setupEventListener() {
@@ -55,8 +62,6 @@ public class UserInfoFragment extends BaseSMUFragment {
             public void onClick(View view) {
                 if (view.getId() == R.id.refresh_info_btn){
                     refreshInfo();
-                    Log.d(TAG, "current handler:"  + getSMUClient().getCurrentSMUHandler());
-
                 }
             }
         };
@@ -67,10 +72,8 @@ public class UserInfoFragment extends BaseSMUFragment {
     // 刷新用户信息
     private void refreshInfo() {
         freezeUI();
-        SMUClient smuClient = getSMUClient();
-        if (smuClient != null){
-            smuClient.refreshUserInfo();
-        }
+        client.refreshUserInfo();
+        client.requestUserPhoto();
     }
 
     private void freezeUI() {
@@ -91,11 +94,14 @@ public class UserInfoFragment extends BaseSMUFragment {
         depositLabel = findViewById(R.id.deposit_label);
         classificationLabel = findViewById(R.id.classification_label);
         addressLabel = findViewById(R.id.address_label);
-        uidLabel = findViewById(R.id.suid_label);
+        suidLabel = findViewById(R.id.suid_label);
         pidLabel = findViewById(R.id.pid_label);
         creditLabel = findViewById(R.id.credit_label);
         createdTimeLabel = findViewById(R.id.created_date_label);
         accountStatusLabel = findViewById(R.id.account_status_label);
+        effectiveAreaLabel = findViewById(R.id.effective_area_label);
+        effectiveDateLabel = findViewById(R.id.effective_date_label);
+        userPhotoImageView = findViewById(R.id.user_photo_image_view);
 
     }
 
@@ -105,30 +111,34 @@ public class UserInfoFragment extends BaseSMUFragment {
         nationalityLabel.setText(String.format("%s:%s", getResources().getText(R.string.nationality_text), profile.getNationality()));
         accountStatusLabel.setText(String.format("%s:%s", getResources().getText(R.string.account_status_text), profile.getAccountStatus()));
         pidLabel.setText(String.format("%s:%s", getResources().getText(R.string.pid_text), profile.getPID()));
-        uidLabel.setText(String.format("%s:%s", getResources().getText(R.string.suid_text), profile.getSUID()));
+        suidLabel.setText(String.format("%s:%s", getResources().getText(R.string.suid_text), profile.getSUID()));
         createdTimeLabel.setText(String.format("%s:%s", getResources().getText(R.string.created_time_text), profile.getCreatedDate()));
-        creditLabel.setText(String.format("%s:%s", getResources().getText(R.string.credit_text), profile.getCreatedDate()));
+        creditLabel.setText(String.format("%s:%s", getResources().getText(R.string.credit_text), profile.getCreditCard()));
         classificationLabel.setText(String.format("%s:%s", getResources().getText(R.string.classification_text), profile.getClassification()));
         addressLabel.setText(String.format("%s:%s", getResources().getText(R.string.address_text), profile.getAddress()));
         roleLabel.setText(String.format("%s:%s", getResources().getText(R.string.role_text), profile.getRole()));
         departmentLabel.setText(String.format("%s:%s", getResources().getText(R.string.department_text), profile.getDepartment()));
         depositLabel.setText(String.format("%s:%s", getResources().getText(R.string.deposit_text), profile.getDeposit()));
+        effectiveAreaLabel.setText(String.format("%s:%s", getResources().getText(R.string.effective_area_text), profile.getEffectiveArea()));
+        effectiveDateLabel.setText(String.format("%s:%s", getResources().getText(R.string.effective_area_text), profile.getEffectiveDate()));
         unfreezeUI();
     }
 
     private  <T extends View> T findViewById(@IdRes int id) {
-        return getView().findViewById(id);
+        return Objects.requireNonNull(getView()).findViewById(id);
     }
 
     @Override
-    public void onClientMessageReceived(int msgId, Object data) {
+    public void onMessageReceived(int msgId, Object data) {
         Log.d(TAG, "" + msgId);
-        Toast.makeText(getContext(), data.toString(), Toast.LENGTH_SHORT).show();
+        switch (msgId){
+            case SMUClient.ClientMessages.RECEIVE_USER_PROFILE:
+                onUserInfoUpdated((UserProfile)data);
+                break;
+            case SMUClient.ClientMessages.RECEIVE_USER_PHOTO:
+                userPhotoImageView.setImageBitmap((Bitmap)data);
+                break;
+        }
         unfreezeUI();
     }
-
-    private void initLabels(){
-
-    }
-
 }

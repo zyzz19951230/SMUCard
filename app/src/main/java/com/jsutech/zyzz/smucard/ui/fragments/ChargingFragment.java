@@ -8,24 +8,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
+import com.jsutech.zyzz.smucard.BaseSMUActivity;
 import com.jsutech.zyzz.smucard.R;
+import com.jsutech.zyzz.smucard.network.SMUClient;
 
 /**
  * Created by zyzz on 3/31/18.
  *
  */
 
-public class ChargingFragment extends BaseSMUFragment {
+public class ChargingFragment extends BaseFragment {
     private static final String TAG = "ChargingFragment";
+    private SMUClient client;
     @Override
-    public void onClientMessageReceived(int msgId, Object data) {
+    public void onMessageReceived(int msgId, Object data) {
 
     }
 
-    @Override
-    public void switchContext() {
-
-    }
 
     @Nullable
     @Override
@@ -36,13 +35,14 @@ public class ChargingFragment extends BaseSMUFragment {
     @Override
     public void onStart() {
         super.onStart();
+        client = ((BaseSMUActivity)getContext()).getClient();
         ImageButton btn = getActivity().findViewById(R.id.refresh_bal_btn);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "current handler:"  + getSMUClient().getCurrentSMUHandler());
 
             }
         });
     }
+
 }

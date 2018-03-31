@@ -7,30 +7,17 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.jsutech.zyzz.smucard.network.ISMUClientReceiver;
 import com.jsutech.zyzz.smucard.network.SMUClient;
+import com.jsutech.zyzz.smucard.network.SMUHandler;
+import com.jsutech.zyzz.smucard.ui.fragments.BaseFragment;
 
 /**
  * Created by zyzz on 3/24/18.
  *
  */
 
-public class BaseSMUActivity extends AppCompatActivity implements ISMUClientReceiver{
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
-    }
+abstract public class BaseSMUActivity extends AppCompatActivity implements ISMUClientReceiver{
 
-    @Override
-    public void onClientMessageReceived(int msgId, Object data) {
+    abstract public void onClientMessageReceived(int msgId, Object data);
+    abstract public SMUClient getClient();
 
-    }
-
-    @Override
-    public SMUClient getSMUClient() {
-        return null;
-    }
-
-    @Override
-    public void switchContext() {
-
-    }
 }

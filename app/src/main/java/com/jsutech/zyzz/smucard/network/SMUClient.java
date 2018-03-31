@@ -1,6 +1,7 @@
 package com.jsutech.zyzz.smucard.network;
 
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.jsutech.zyzz.smucard.db.models.UserProfile;
 import com.jsutech.zyzz.smucard.network.exceptions.ClientException;
@@ -8,11 +9,15 @@ import com.jsutech.zyzz.smucard.network.exceptions.NetworkException;
 import com.jsutech.zyzz.smucard.network.exceptions.ServerException;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
+import okhttp3.Cookie;
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -28,6 +33,9 @@ import okhttp3.Response;
 
 public class SMUClient {
 
+    private static final String TAG = "SMUClient";
+
+
     static class Actions{
         final static String CHECK_CODE = "servlet/checkcode";
         final static String IS_LOGIN = "isLogin.action";
@@ -40,6 +48,7 @@ public class SMUClient {
     private final static String BASE_URL = "https://card.swun.edu.cn/";
     // 线程池，用以执行异步请求任务
     private final static ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+    private Map<String, String> defaultHeaders;
 
     private OkHttpClient client;
     private SMUCookieJar sumCookieJar;
@@ -48,6 +57,7 @@ public class SMUClient {
     public SMUClient(int timeout){
         sumCookieJar = new SMUCookieJar();
         configClient(timeout);
+
     }
 
     public SMUClient(){
@@ -73,12 +83,14 @@ public class SMUClient {
     public void configClient(int timeout){
         OkHttpClient.Builder clientBuilder = null;
 
-        if (this.client != null)
+        if (this.client != null) {
             clientBuilder = this.client.newBuilder();
-        else
+        } else {
             // 首次创建Client对象
             clientBuilder = new OkHttpClient.Builder();
-
+            // 使用拦截器
+            clientBuilder.addInterceptor(new RequestInterceptor());
+        }
         // 配置Client
         if (timeout > 0) {
             clientBuilder.connectTimeout(timeout, TimeUnit.SECONDS).readTimeout(timeout, TimeUnit.SECONDS);
@@ -118,11 +130,13 @@ public class SMUClient {
 
     // 同步GET方法
     private Call get(String action, Headers headers, Object tag) {
+
         return request(Helpers.HttpMethod.GET, HttpUrl.parse(Helpers.getAbsUrl(BASE_URL, action)), headers, null, tag);
     }
 
     // 同步POST方法
     private Call post(String action, Headers headers, RequestBody requestBody, Object tag){
+
         return request(Helpers.HttpMethod.POST,  HttpUrl.parse(Helpers.getAbsUrl(BASE_URL, action)), headers, requestBody, tag);
     }
 
@@ -150,7 +164,6 @@ public class SMUClient {
         });
         return call;
     }
-
 
     public Call login(String username, String password, String checkCode){
         // 构造登录表单
@@ -207,7 +220,7 @@ public class SMUClient {
 
     public Call refreshUserInfo(){
 
-        final Call userInfoCall = post(Actions.USER_INFO, null, null, null);
+        final Call userInfoCall = get(Actions.USER_INFO, null, null);
         // 发起异步请求
         EXECUTOR_SERVICE.execute(new SMURequest(getSmuHandler()) {
             @Override
@@ -221,7 +234,7 @@ public class SMUClient {
                     } else {
                         if (isLoginResponse.body().string().endsWith("true")){
                             // 用户已登录，发起请求
-                           Response response =  userInfoCall.execute();
+                            Response response =  userInfoCall.execute();
                            if (!response.isSuccessful()){
                                onException(new ServerException(response.code(), response.message()));
                            } else {
@@ -234,7 +247,6 @@ public class SMUClient {
                                    onResponse(ClientMessages.RECEIVE_USER_PROFILE, profile);
                                }
                            }
-
                         } else {
                             // 用户未登录
                             onException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
@@ -247,6 +259,42 @@ public class SMUClient {
             }
         });
         return userInfoCall;
+    }
+
+    public Call requestUserPhoto(){
+
+        final Call userPhotoCall = get(Actions.USER_PHOTO, null, null);
+        // 发起异步请求
+        EXECUTOR_SERVICE.execute(new SMURequest(getSmuHandler()) {
+            @Override
+            void doRequest() {
+                // 先测试用户是否已登录
+                Call isLoginCall = get(Actions.IS_LOGIN, null, null);
+                try {
+                    Response isLoginResponse = isLoginCall.execute();
+                    if (!isLoginResponse.isSuccessful()){
+                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
+                    } else {
+                        if (isLoginResponse.body().string().endsWith("true")){
+                            // 用户已登录，发起请求
+                            Response response =  userPhotoCall.execute();
+                            if (!response.isSuccessful()){
+                                onException(new ServerException(response.code(), response.message()));
+                            } else {
+                                onResponse(ClientMessages.RECEIVE_USER_PHOTO, BitmapFactory.decodeStream(response.body().byteStream()));
+                            }
+                        } else {
+                            // 用户未登录
+                            onException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    onException(new NetworkException(e));
+                }
+            }
+        });
+        return userPhotoCall;
     }
 
     // 内部类：客户端消息常量定义
@@ -264,5 +312,6 @@ public class SMUClient {
         public static final int REQUEST_CANCELLED = 6;
         public static final int PARSE_USER_PROFILE_ERROR = 7;
         public static final int RECEIVE_USER_PROFILE = 8;
+        public static final int RECEIVE_USER_PHOTO = 9;
     }
 }

@@ -7,6 +7,4 @@ package com.jsutech.zyzz.smucard.network;
 
 public interface ISMUClientReceiver {
     void onClientMessageReceived(int msgId, Object data);
-    SMUClient getSMUClient();
-    void switchContext();
 }

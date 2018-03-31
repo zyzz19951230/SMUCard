@@ -8,7 +8,7 @@
     android:padding="16dp">
 
     <ImageView
-        android:id="@+id/userPhotoImageView"
+        android:id="@+id/user_photo_image_view_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
@@ -16,14 +16,14 @@
         app:srcCompat="@drawable/user_photo_placeholder" />
 
     <TextView
-        android:id="@+id/usernameTextView"
+        android:id="@+id/username_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/username_text"
         android:textColor="@color/white" />
 
     <TextView
-        android:id="@+id/uidTextView"
+        android:id="@+id/suid_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/suid"
