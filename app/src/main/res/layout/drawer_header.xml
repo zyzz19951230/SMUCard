@@ -9,8 +9,8 @@
 
     <ImageView
         android:id="@+id/user_photo_image_view_2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="75dp"
+        android:layout_height="100dp"
         android:layout_marginBottom="16dp"
         android:layout_marginTop="36dp"
         app:srcCompat="@drawable/user_photo_placeholder" />
