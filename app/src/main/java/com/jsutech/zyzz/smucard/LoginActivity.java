@@ -16,10 +16,13 @@ import android.widget.ImageView;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.jsutech.zyzz.smucard.db.DBManager;
+import com.jsutech.zyzz.smucard.db.models.UserProfile;
 import com.jsutech.zyzz.smucard.network.ISMUClientReceiver;
 import com.jsutech.zyzz.smucard.network.SMUClient;
 import com.jsutech.zyzz.smucard.network.SMUHandler;
 import com.jsutech.zyzz.smucard.network.exceptions.NetworkException;
+import com.jsutech.zyzz.smucard.ui.fragments.ICommunicator;
 
 public class LoginActivity extends BaseSMUActivity {
 
@@ -273,9 +276,15 @@ public class LoginActivity extends BaseSMUActivity {
     // 跳转到主页面
     private void jumpToMainActivity(String loginID){
         Intent intent = new Intent(this, HomeActivity.class);
+        // 从数据库中查询UserProfile
+        UserProfile userProfile = DBManager.findUserProfile(loginID);
         intent.putExtra("loginID", loginID);
         startActivity(intent);
-        releaseImageViewResource();
         finish();
+    }
+
+    @Override
+    public void onMessageReceived(int msgID, Object data, ICommunicator sender) {
+
     }
 }

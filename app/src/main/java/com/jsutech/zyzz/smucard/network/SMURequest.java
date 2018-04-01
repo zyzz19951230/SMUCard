@@ -17,12 +17,12 @@ abstract class SMURequest extends AbsAsyncRequest {
     abstract void doRequest();
 
     @Override
-    void onResponse(int code, Object data) {
+    void handleResponse(int code, Object data) {
         smuHandler.sendClientMessage(code, data);
     }
 
     @Override
-    void onException(Exception e) {
+    void handleException(Exception e) {
         if (e instanceof NetworkException){
             smuHandler.sendClientMessage(SMUClient.ClientMessages.NETWORK_ERROR, e);
         } else if (e instanceof ServerException){

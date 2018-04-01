@@ -1,7 +1,6 @@
 package com.jsutech.zyzz.smucard.network;
 
 import android.graphics.BitmapFactory;
-import android.util.Log;
 
 import com.jsutech.zyzz.smucard.db.models.UserProfile;
 import com.jsutech.zyzz.smucard.network.exceptions.ClientException;
@@ -9,15 +8,12 @@ import com.jsutech.zyzz.smucard.network.exceptions.NetworkException;
 import com.jsutech.zyzz.smucard.network.exceptions.ServerException;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.Cookie;
 import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -150,15 +146,15 @@ public class SMUClient {
                     Response response = call.execute();
                     // 请求不成功
                     if (!response.isSuccessful()){
-                        onException(new ServerException(response.code(), response.message()));
+                        handleException(new ServerException(response.code(), response.message()));
                     } else {
                         // 网络请求成功，读取验证码图片
-                        onResponse(ClientMessages.RECEIVE_CHECK_CODE, BitmapFactory.decodeStream(response.body().byteStream()));
+                        handleResponse(ClientMessages.RECEIVE_CHECK_CODE, BitmapFactory.decodeStream(response.body().byteStream()));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                     // 网络请求发生错误
-                    onException(new NetworkException(e));
+                    handleException(new NetworkException(e));
                 }
             }
         });
@@ -182,43 +178,43 @@ public class SMUClient {
                 try {
                     Response isLoginResponse = isLoginCall.execute();
                     if (!isLoginResponse.isSuccessful()){
-                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
+                        handleException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
                     } else {
                         if (isLoginResponse.body().string().endsWith("true")){
                             // 用户已登录
-                            onException(new ClientException("用户已登录！", ClientMessages.ALREADY_LOGIN));
+                            handleException(new ClientException("用户已登录！", ClientMessages.ALREADY_LOGIN));
 
                         } else {
                             // 用户未登录，发送登录请求
                             Response loginResponse = loginCall.execute();
                             if (!loginResponse.isSuccessful()){
-                                onException(new ServerException(loginResponse.code(), loginResponse.message()));
+                                handleException(new ServerException(loginResponse.code(), loginResponse.message()));
                             } else {
                                 // 分析服务器返回的结果
                                 String bodyText = loginResponse.body().string();
                                 if (Helpers.isCheckCodeWrong(bodyText)){
                                     // 验证码错误
-                                    onException(new ClientException("验证码错误！", ClientMessages.CHECK_CODE_WRONG));
+                                    handleException(new ClientException("验证码错误！", ClientMessages.CHECK_CODE_WRONG));
                                 } else if(!Helpers.isIndexPage(bodyText)){
                                     // 用户名或者密码错误
-                                    onException(new ClientException("用户名或密码错误", ClientMessages.USR_OR_PWD_WRONG));
+                                    handleException(new ClientException("用户名或密码错误", ClientMessages.USR_OR_PWD_WRONG));
                                 } else {
                                     // 登录成功
-                                    onResponse(ClientMessages.LOGIN_SUCCESS, "登录成功");
+                                    handleResponse(ClientMessages.LOGIN_SUCCESS, "登录成功");
                                 }
                             }
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    onException(new NetworkException(e));
+                    handleException(new NetworkException(e));
                 }
             }
         });
         return loginCall;
     }
 
-    public Call refreshUserInfo(){
+    public Call requestUserProfile(){
 
         final Call userInfoCall = get(Actions.USER_INFO, null, null);
         // 发起异步请求
@@ -230,31 +226,31 @@ public class SMUClient {
                 try {
                     Response isLoginResponse = isLoginCall.execute();
                     if (!isLoginResponse.isSuccessful()){
-                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
+                        handleException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
                     } else {
                         if (isLoginResponse.body().string().endsWith("true")){
                             // 用户已登录，发起请求
                             Response response =  userInfoCall.execute();
                            if (!response.isSuccessful()){
-                               onException(new ServerException(response.code(), response.message()));
+                               handleException(new ServerException(response.code(), response.message()));
                            } else {
                                // 读取Response
                                String text = response.body().string();
                                UserProfile profile = Helpers.parseUserProfile(text);
                                if (profile == null){
-                                   onException(new ClientException("获取用户信息时出错！", ClientMessages.PARSE_USER_PROFILE_ERROR));
+                                   handleException(new ClientException("获取用户信息时出错！", ClientMessages.PARSE_USER_PROFILE_ERROR));
                                } else {
-                                   onResponse(ClientMessages.RECEIVE_USER_PROFILE, profile);
+                                   handleResponse(ClientMessages.RECEIVE_USER_PROFILE, profile);
                                }
                            }
                         } else {
                             // 用户未登录
-                            onException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
+                            handleException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    onException(new NetworkException(e));
+                    handleException(new NetworkException(e));
                 }
             }
         });
@@ -273,28 +269,57 @@ public class SMUClient {
                 try {
                     Response isLoginResponse = isLoginCall.execute();
                     if (!isLoginResponse.isSuccessful()){
-                        onException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
+                        handleException(new ServerException(isLoginResponse.code(), isLoginResponse.message()));
                     } else {
                         if (isLoginResponse.body().string().endsWith("true")){
                             // 用户已登录，发起请求
                             Response response =  userPhotoCall.execute();
                             if (!response.isSuccessful()){
-                                onException(new ServerException(response.code(), response.message()));
+                                handleException(new ServerException(response.code(), response.message()));
                             } else {
-                                onResponse(ClientMessages.RECEIVE_USER_PHOTO, BitmapFactory.decodeStream(response.body().byteStream()));
+                                handleResponse(ClientMessages.RECEIVE_USER_PHOTO, BitmapFactory.decodeStream(response.body().byteStream()));
                             }
                         } else {
                             // 用户未登录
-                            onException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
+                            handleException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    onException(new NetworkException(e));
+                    handleException(new NetworkException(e));
                 }
             }
         });
         return userPhotoCall;
+    }
+
+    private boolean loginRequired(){
+        final boolean[] isLogin = {false};
+        final Call isLoginCall = get(Actions.IS_LOGIN, null,null);
+        SMURequest request = new SMURequest(smuHandler) {
+            @Override
+            void doRequest() {
+                try {
+                    Response response = isLoginCall.execute();
+                    if (!response.isSuccessful()){
+                        handleException(new ServerException(response.code(), response.message()));
+                        return;
+                    }
+                    if (response.body().string().equalsIgnoreCase("false")){
+                        handleException(new ClientException("用户未登录或会话已过期，请重新登录！", ClientMessages.NOT_LOGIN_YET));
+                        return;
+                    }
+                    // 用户已登录
+                    isLogin[0] = true;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    handleException(new NetworkException(e));
+                }
+            }
+        };
+        request.doRequest();
+
+        return isLogin[0];
     }
 
     // 内部类：客户端消息常量定义
@@ -302,7 +327,6 @@ public class SMUClient {
         public final static int NETWORK_ERROR = -1;
         public final static int SERVER_ERROR = -2;
         public final static int UNKNOWN_ERROR = -3;
-
         public final static int NOT_LOGIN_YET = 0;
         public final static int ALREADY_LOGIN = 1;
         public final static int RECEIVE_CHECK_CODE = 2;

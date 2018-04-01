@@ -1,6 +1,10 @@
 package com.jsutech.zyzz.smucard;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -17,13 +21,17 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.jsutech.zyzz.smucard.db.DBManager;
 import com.jsutech.zyzz.smucard.db.models.UserProfile;
 import com.jsutech.zyzz.smucard.network.SMUClient;
 import com.jsutech.zyzz.smucard.network.SMUHandler;
 import com.jsutech.zyzz.smucard.ui.fragments.BaseFragment;
 import com.jsutech.zyzz.smucard.ui.fragments.ChargingFragment;
+import com.jsutech.zyzz.smucard.ui.fragments.ICommunicator;
+import com.jsutech.zyzz.smucard.ui.fragments.UpdateMessages;
 import com.jsutech.zyzz.smucard.ui.fragments.UserInfoFragment;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +45,7 @@ public class HomeActivity extends BaseSMUActivity implements
     private Map<String, BaseFragment> fragments;
     private FragmentManager fragmentManager;
     private SMUClient client;
+    private UserProfile userProfile;
 
 
     @Override
@@ -45,12 +54,74 @@ public class HomeActivity extends BaseSMUActivity implements
         setContentView(R.layout.activity_home);
         // 设置界面
         setupUI();
-        initFragments();
+        setupFragments();
+        setupClient();
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        // 获取loginID
+        Intent intent = getIntent();
+        String loginID = intent.getStringExtra("loginID");
+         // 校验loginID的合法性
+        if (loginID == null || loginID.equals("")){
+            jumpToLoginActivity();
+        }
+        // 从数据库中查询是否已有相应的记录
+        // 若已存在相应记录，则使用该记录；若不存在相应的记录则从请求网络
+        userProfile = DBManager.findUserProfile(loginID);
+        if (userProfile != null){
+            // 使用数据库记录来更新界面
+            // 首先更新Activity界面
+            updateNavHeader();
+            // 接着，向Fragment发送消息，更新Fragment中的界面
+            sendMessage(fragments.get(UserInfoFragment.class.getName()), UpdateMessages.UPDATE_USER_PROFILE, userProfile);
+            Log.d(TAG, "From DB.");
+        } else {
+            userProfile = new UserProfile();
+            userProfile.setSUID(loginID);
+            DBManager.saveOrUpdateUserProfile(userProfile);
+            // 执行网络请求
+            client.requestUserProfile();
+            client.requestUserPhoto();
+            Log.d(TAG, "From Net");
+        }
+    }
+
+    private void updateNavHeader() {
+        String username = userProfile.getName();
+        String suid = userProfile.getSUID();
+        byte[] userPhoto = userProfile.getPhoto();
+        if (username != null && !username.equals("")){
+            usernameTextView.setText((userProfile.getName()));
+        }
+
+        if (suid != null && suid.equals("")){
+            suidTextView.setText(userProfile.getSUID());
+        }
+
+        if (userPhoto != null){
+            releaseImageViewResource(userPhotoImage);
+            userPhotoImage.setImageBitmap(BitmapFactory.decodeByteArray(userPhoto, 0, userPhoto.length));
+        }
+    }
+
+
+    private void jumpToLoginActivity() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    private void setupClient() {
         client = ((SMUApplication)getApplication()).getClient();
         client.setSMUHandler(new SMUHandler(this));
     }
 
-    private void initFragments() {
+    private void setupFragments() {
         fragments = new HashMap<>();
         fragmentManager = getSupportFragmentManager();
         // 创建所有fragment
@@ -150,29 +221,71 @@ public class HomeActivity extends BaseSMUActivity implements
         return true;
     }
 
+    /**
+     *  Activity 与 SMUClient进行通信的接口
+     * @param msgId
+     * @param data
+     */
     @Override
     public void onClientMessageReceived(int msgId, Object data) {
         // 在activity中除处理的事件
         switch (msgId){
             case SMUClient.ClientMessages.RECEIVE_USER_PHOTO:
-                userPhotoImage.setImageBitmap((Bitmap)data);
+                // 接收用户照片
+                Bitmap userPhoto = (Bitmap)data;
+                // 转成byte数组
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                userPhoto.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                userProfile.setPhoto(byteArrayOutputStream.toByteArray());
+                updateNavHeader();
+                sendMessage(fragments.get(UserInfoFragment.class.getName()), UpdateMessages.UPDATE_USER_PROFILE, userProfile);
+                // 更新数据库
+                DBManager.saveOrUpdateUserProfile(userProfile);
                 break;
             case SMUClient.ClientMessages.RECEIVE_USER_PROFILE:
+                // 接收UserProfile
                 UserProfile profile = (UserProfile) data;
-                usernameTextView.setText((profile.getName()));
-                suidTextView.setText(profile.getSUID());
+                userProfile.update(profile);
+                // 更新界面
+                updateNavHeader();
+                sendMessage(fragments.get(UserInfoFragment.class.getName()), UpdateMessages.UPDATE_USER_PROFILE, userProfile);
+                // 更新数据库
+                DBManager.saveOrUpdateUserProfile(userProfile);
                 break;
-        }
-        // 向所有fragments传递事件
-        for (BaseFragment fragment : fragments.values()){
-            if (fragment.filterMessage(msgId)){
-                fragment.onMessageReceived(msgId, data);
-            }
         }
     }
 
     @Override
     public SMUClient getClient() {
         return client;
+    }
+
+    /***
+     *  Activity 与 Fragment进行通信的接口
+     * @param msgID
+     * @param data
+     * @param sender
+     */
+    @Override
+    public void onMessageReceived(int msgID, Object data, ICommunicator sender) {
+        switch (msgID){
+            case UpdateMessages.REFRESH_USER_PHOTO:
+                client.requestUserPhoto();
+                break;
+            case UpdateMessages.REFRESH_USER_PROFILE:
+                client.requestUserProfile();
+                break;
+        }
+    }
+    public void releaseImageViewResource(ImageView imageView) {
+        Drawable drawable = imageView.getDrawable();
+        if (drawable != null && drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            Bitmap bitmap = bitmapDrawable.getBitmap();
+            if (bitmap != null && !bitmap.isRecycled()) {
+                Log.d(TAG, "recycle unused bitmap.");
+                bitmap.recycle();
+            }
+        }
     }
 }

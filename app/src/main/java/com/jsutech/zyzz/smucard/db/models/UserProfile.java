@@ -1,5 +1,7 @@
 package com.jsutech.zyzz.smucard.db.models;
 
+import org.litepal.annotation.Column;
+import org.litepal.annotation.Encrypt;
 import org.litepal.crud.DataSupport;
 
 import java.util.Date;
@@ -146,22 +148,46 @@ public class UserProfile extends DataSupport {
         this.lastLogin = lastLogin;
     }
 
+    @Encrypt(algorithm = AES)
     private String name;
     private String gender;
     private String deposit;
     private String accountStatus;
     private String createdDate;
     private String nationality;
+    @Encrypt(algorithm = AES)
     private String creditCard;
     private String role;
+    @Encrypt(algorithm = AES)
     private String address;
     private String classification;
+    @Column(unique = true, nullable = false)
     private String SUID;
     private String effectiveDate;
     private String department;
+    @Encrypt(algorithm = AES)
     private String PID;
     private String effectiveArea;
     private byte[] photo;
     private Date lastLogin;
 
+    public void update(UserProfile newProfile) {
+        name = newProfile.getName();
+        gender = newProfile.getGender();
+        deposit = newProfile.getDeposit();
+        accountStatus = newProfile.getAccountStatus();
+        createdDate = newProfile.getCreatedDate();
+        nationality = newProfile.getNationality();
+        creditCard = newProfile.getCreditCard();
+        role = newProfile.getRole();
+        address = newProfile.getAddress();
+        classification = newProfile.getClassification();
+        SUID = newProfile.getSUID();
+        effectiveDate = newProfile.getEffectiveDate();
+        effectiveArea = newProfile.getEffectiveArea();
+        department = newProfile.getDepartment();
+        PID = newProfile.getPID();
+        photo = newProfile.getPhoto();
+        lastLogin = newProfile.getLastLogin();
+    }
 }

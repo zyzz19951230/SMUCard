@@ -11,9 +11,13 @@ import com.jsutech.zyzz.smucard.network.SMUClient;
  *
  */
 
-abstract public class BaseFragment extends Fragment{
+abstract public class BaseFragment extends Fragment implements ICommunicator {
 
-    abstract public void onMessageReceived(int msgId, Object data);
+    @Override
+    public void sendMessage(ICommunicator receiver, int msgID, Object data) {
+        receiver.onMessageReceived(msgID, data, this);
+    }
+
     public boolean filterMessage(int msgID){
         return true;
     }

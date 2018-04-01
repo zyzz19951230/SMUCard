@@ -20,10 +20,7 @@ import com.jsutech.zyzz.smucard.network.SMUClient;
 public class ChargingFragment extends BaseFragment {
     private static final String TAG = "ChargingFragment";
     private SMUClient client;
-    @Override
-    public void onMessageReceived(int msgId, Object data) {
 
-    }
 
 
     @Nullable
@@ -45,4 +42,8 @@ public class ChargingFragment extends BaseFragment {
         });
     }
 
+    @Override
+    public void onMessageReceived(int msgID, Object data, ICommunicator sender) {
+
+    }
 }
