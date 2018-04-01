@@ -1,0 +1,7 @@
+<litepal>
+    <dbname value="user_profile" />
+    <version value="1" />
+    <list>
+        <mapping class="com.jsutech.zyzz.smucard.db.models.UserProfile" />
+    </list>
+</litepal>
